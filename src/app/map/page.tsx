@@ -21,16 +21,16 @@ export default function MapPage() {
 
   const selectedLot = useMemo(() => lots.find((l) => l.id === selectedLotId), [lots, selectedLotId])
 
-  const [tick, setTick] = useState(0)
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const watchIdRef = useRef<number | null>(null)
 
-  // simple timer tick for elapsed display
+  // timer tick for elapsed display
   useEffect(() => {
-    const id = window.setInterval(() => setTick((t) => t + 1), 1000)
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000)
     return () => window.clearInterval(id)
   }, [])
 
-  const elapsedSeconds = session ? Math.floor((Date.now() - session.startTime) / 1000) : 0
+  const elapsedSeconds = session ? Math.floor((nowMs - session.startTime) / 1000) : 0
 
   // Start/stop geolocation watching when navigating
   useEffect(() => {

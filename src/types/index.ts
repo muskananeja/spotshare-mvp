@@ -1,15 +1,21 @@
 export type Destination = {
+  id?: string
   name: string
   lat: number
   lng: number
 }
+
+export type Confidence = "high" | "medium" | "low"
 
 export type LotBase = {
   id: string
   name: string
   lat: number
   lng: number
+  type?: "surface" | "underground" | "multistorey" | "street" | "unknown"
   address?: string
+  confidence?: Confidence
+  notes?: string
 }
 
 export type Lot = LotBase & {
@@ -27,22 +33,6 @@ export type TripSession = {
 
 export type LatLng = { lat: number; lng: number }
 
-export type Destination = {
-  name: string
-  lat: number
-  lng: number
-}
-
-export type Lot = {
-  id: string
-  name: string
-  lat: number
-  lng: number
-  address?: string
-  distanceMeters: number
-  walkMins: number
-}
-
 export type POICategory =
   | "cafe"
   | "restaurant"
@@ -56,8 +46,7 @@ export type POICategory =
 export type POI = {
   id: string
   category: POICategory
-  name?: string
+  name: string
   lat: number
   lng: number
 }
-

@@ -23,6 +23,7 @@ export default function LotsPage() {
   useEffect(() => {
     if (!destination) return
 
+    const activeDestination = destination
     let cancelled = false
 
     async function fetchLots() {
@@ -31,18 +32,19 @@ export default function LotsPage() {
         setLotsLoading(true)
 
         const res = await fetch(
-          `/api/lots?lat=${destination.lat}&lng=${destination.lng}`
+          `/api/lots?lat=${activeDestination.lat}&lng=${activeDestination.lng}`
         )
         if (!res.ok) throw new Error("Failed to load lots")
 
-        const data = await res.json()
+        const payload = await res.json()
         if (cancelled) return
 
-        setLots(data)
+        const nextLots = payload?.lots ?? []
+        setLots(nextLots)
 
         // auto-select first lot
-        if (data?.[0]?.id) selectLot(data[0].id)
-      } catch (e) {
+        if (nextLots[0]?.id) selectLot(nextLots[0].id)
+      } catch {
         if (!cancelled) setLotsError("Could not load lots.")
       } finally {
         if (!cancelled) setLotsLoading(false)
@@ -81,7 +83,7 @@ export default function LotsPage() {
     if (!selectedLot) return
 
     // Open Google Maps in new tab (MVP seam).
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedLot.lat},${selectedLot.lng}&travelmode=walking`
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedLot.lat},${selectedLot.lng}&travelmode=driving`
     window.open(url, "_blank", "noopener,noreferrer")
 
     // Still show Map screen in-app for tracking.
@@ -150,6 +152,8 @@ export default function LotsPage() {
           label="Get Directions"
           disabled={!selectedLot}
           onClick={openGoogleMapsAndContinue}
+          secondaryLabel={selectedLot ? "View Parkability" : undefined}
+          onSecondaryClick={selectedLot ? () => router.push("/parkability") : undefined}
         />
       </div>
     </main>
