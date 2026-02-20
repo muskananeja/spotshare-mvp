@@ -1,0 +1,30 @@
+[
+  {
+    "id": "lot_st_andrews_01",
+    "name": "St Andrew's Parking",
+    "lat": 19.0521,
+    "lng": 72.8267,
+    "type": "surface",
+    "address": "St Andrews Rd, Bandra West",
+    "confidence": "high",
+    "notes": "Known public access on weekdays"
+  },
+  {
+    "id": "lot_pali_naka_01",
+    "name": "Pali Naka Lot",
+    "lat": 19.0561,
+    "lng": 72.8299,
+    "type": "surface",
+    "address": "Pali Naka Junction",
+    "confidence": "medium"
+  },
+  {
+    "id": "lot_linking_road_01",
+    "name": "Linking Road Parking",
+    "lat": 19.0632,
+    "lng": 72.8331,
+    "type": "multistorey",
+    "address": "Near Linking Road",
+    "confidence": "medium"
+  }
+]

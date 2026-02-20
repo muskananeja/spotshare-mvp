@@ -1,0 +1,10 @@
+[
+  { "id": "poi_blue_tokai_01", "name": "Blue Tokai", "category": "cafe", "lat": 19.0553, "lng": 72.8301 },
+  { "id": "poi_hdfc_atm_01", "name": "HDFC ATM", "category": "atm", "lat": 19.0548, "lng": 72.8305 },
+  { "id": "poi_medplus_01", "name": "MedPlus", "category": "pharmacy", "lat": 19.0568, "lng": 72.8322 },
+  { "id": "poi_linking_rest_01", "name": "Linking Bites", "category": "restaurant", "lat": 19.0618, "lng": 72.8328 },
+  { "id": "poi_bus_01", "name": "Bandra Bus Stop", "category": "bus_stop", "lat": 19.0589, "lng": 72.8339 },
+  { "id": "poi_station_01", "name": "Bandra Station", "category": "rail_station", "lat": 19.0541, "lng": 72.8402 },
+  { "id": "poi_more_01", "name": "More Supermarket", "category": "supermarket", "lat": 19.0592, "lng": 72.8297 },
+  { "id": "poi_quick_01", "name": "Quick Mart", "category": "convenience", "lat": 19.0601, "lng": 72.8315 }
+]

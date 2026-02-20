@@ -1,72 +1,106 @@
-import type { LatLng, POI } from "@/types"
-import { haversineMeters } from "@/utils/geo"
+"use client"
 
-export type ParkabilityCounts = {
-  foodCoffee: number
-  essentials: number
-  transit: number
+import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useTripStore } from "@/store/tripStore"
+import type { POI } from "@/types"
+
+type ParkabilityResponse = {
+  lotId: string
+  lotName: string
+  score: number
+  label: string
+  description: string
+  counts: { food: number; essentials: number; transit: number }
+  poisNearby: POI[]
 }
 
-export type ParkabilityResult = {
-  score: number // 0..100
-  label: "Excellent last-mile walk" | "Good last-mile walk" | "Needs improvement"
-  counts: ParkabilityCounts
-  nearbyPOIs: POI[]
-}
+export default function ParkabilityPage() {
+  const router = useRouter()
+  const selectedLotId = useTripStore((s) => s.selectedLotId)
+  const lots = useTripStore((s) => s.lots)
+  const selectedLot = useMemo(() => lots.find((l) => l.id === selectedLotId), [lots, selectedLotId])
 
-const FOOD = new Set(["cafe", "restaurant"])
-const ESSENTIALS = new Set(["atm", "pharmacy", "convenience", "supermarket"])
-const TRANSIT = new Set(["bus_stop", "rail_station"])
+  const [data, setData] = useState<ParkabilityResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-export function computeParkability(params: {
-  lot: LatLng
-  pois: POI[]
-  radiusMeters?: number
-}): ParkabilityResult {
-  const radius = params.radiusMeters ?? 1000
+  useEffect(() => {
+    if (!selectedLotId) {
+      setLoading(false)
+      return
+    }
 
-  const nearby = params.pois.filter((p) => {
-    const d = haversineMeters(params.lot, { lat: p.lat, lng: p.lng })
-    return d <= radius
-  })
+    let cancelled = false
 
-  const counts: ParkabilityCounts = {
-    foodCoffee: nearby.filter((p) => FOOD.has(p.category)).length,
-    essentials: nearby.filter((p) => ESSENTIALS.has(p.category)).length,
-    transit: nearby.filter((p) => TRANSIT.has(p.category)).length,
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(`/api/parkability?lotId=${selectedLotId}`)
+        if (!res.ok) throw new Error("Could not load parkability")
+        const json = (await res.json()) as ParkabilityResponse
+        if (!cancelled) setData(json)
+      } catch {
+        if (!cancelled) setError("Failed to load parkability")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedLotId])
+
+  if (!selectedLotId || !selectedLot) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center">
+          <p className="font-semibold">No lot selected</p>
+          <button className="mt-4 rounded-2xl bg-black px-4 py-3 text-white" onClick={() => router.push("/lots")}>Go to lots</button>
+        </div>
+      </main>
+    )
   }
 
-  // simple MVP weights
-  const raw = counts.foodCoffee * 2 + counts.essentials * 4 + counts.transit * 2
-  const score = clamp(Math.round(raw), 0, 100)
+  return (
+    <main className="min-h-screen px-4 py-8 flex justify-center">
+      <div className="w-full max-w-sm space-y-4">
+        <h1 className="text-2xl font-semibold">Parkability</h1>
+        {loading && <div className="rounded-2xl border bg-white p-4">Loading…</div>}
+        {error && <div className="rounded-2xl border bg-white p-4 text-red-600">{error}</div>}
+        {data && (
+          <>
+            <div className="rounded-2xl border bg-white p-4">
+              <p className="text-sm text-neutral-500">{data.lotName}</p>
+              <p className="text-4xl font-bold mt-1">{data.score}</p>
+              <p className="font-medium">{data.label}</p>
+              <p className="text-sm text-neutral-700 mt-2">{data.description}</p>
+            </div>
 
-  const label =
-    score >= 80 ? "Excellent last-mile walk" : score >= 60 ? "Good last-mile walk" : "Needs improvement"
+            <div className="rounded-2xl border bg-white p-4 grid grid-cols-3 gap-2 text-center">
+              <div><p className="text-xs text-neutral-500">Food</p><p className="font-semibold">{data.counts.food}</p></div>
+              <div><p className="text-xs text-neutral-500">Essentials</p><p className="font-semibold">{data.counts.essentials}</p></div>
+              <div><p className="text-xs text-neutral-500">Transit</p><p className="font-semibold">{data.counts.transit}</p></div>
+            </div>
 
-  return { score, label, counts, nearbyPOIs: nearby }
-}
-
-export function categoryColor(category: POI["category"]) {
-  // keep it simple. tune later.
-  switch (category) {
-    case "cafe":
-    case "restaurant":
-      return "#F97316" // orange
-    case "atm":
-      return "#22C55E" // green
-    case "pharmacy":
-      return "#EF4444" // red
-    case "convenience":
-    case "supermarket":
-      return "#3B82F6" // blue
-    case "bus_stop":
-    case "rail_station":
-      return "#EAB308" // yellow
-    default:
-      return "#6B7280" // gray
-  }
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n))
+            <div className="rounded-2xl border bg-white p-4">
+              <p className="text-sm font-medium">Nearby POIs ({data.poisNearby.length})</p>
+              <ul className="mt-2 space-y-2 text-sm">
+                {data.poisNearby.slice(0, 12).map((poi) => (
+                  <li key={poi.id} className="flex justify-between">
+                    <span>{poi.name}</span>
+                    <span className="text-neutral-500">{poi.category}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
+      </div>
+    </main>
+  )
 }

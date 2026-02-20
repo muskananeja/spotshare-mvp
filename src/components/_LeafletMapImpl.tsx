@@ -17,7 +17,7 @@ function setupLeafletIcons() {
   })
 }
 
-export default function _LeafletMapImpl({
+export default function LeafletMapImpl({
   destination,
   lot,
 }: {
